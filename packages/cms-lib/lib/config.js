@@ -8,14 +8,24 @@ const {
 } = require('../errorHandlers');
 const { Mode } = require('./constants');
 
-let _config;
 let _configPath;
+
+const { getConfig, setConfig } = (() => {
+  let _config;
+  return {
+    getConfig: () => _config,
+    setConfig(updatedConfig) {
+      _config = updatedConfig;
+      return _config;
+    },
+  };
+})();
 
 const writeConfig = () => {
   logger.debug(`Writing current config to ${_configPath}`);
   fs.writeFileSync(
     _configPath,
-    yaml.safeDump(JSON.parse(JSON.stringify(_config, null, 2)))
+    yaml.safeDump(JSON.parse(JSON.stringify(getConfig(), null, 2)))
   );
 };
 
@@ -63,29 +73,22 @@ const loadConfig = path => {
   if (sourceError) return;
   const { parsed, error: parseError } = parseConfig(source);
   if (parseError) return;
-  _config = parsed;
+  setConfig(parsed);
 
-  if (!_config) {
+  if (!getConfig()) {
     logger.debug('The config file was empty config');
     logger.debug('Initializing an empty config');
-    _config = {
+    setConfig({
       portals: [],
-    };
+    });
   }
 };
 
 const getAndLoadConfigIfNeeded = () => {
-  if (!_config) {
+  if (!getConfig()) {
     loadConfig();
   }
-  return _config;
-};
-
-const getConfig = () => _config;
-
-const setConfig = updatedConfig => {
-  _config = updatedConfig;
-  return _config;
+  return getConfig();
 };
 
 const getPortalConfig = portalId => {
