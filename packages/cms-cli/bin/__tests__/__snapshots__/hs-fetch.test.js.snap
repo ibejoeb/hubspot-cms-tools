@@ -1,0 +1,57 @@
+// Jest Snapshot v1, https://goo.gl/fbAQLP
+
+exports[`hs fetch (missing src) 1`] = `"[0m[31m[ERROR][39m[0m A source to fetch is required"`;
+
+exports[`hs fetch /does-not-exist 1`] = `"[0m[31m[ERROR][39m[0m The request failed because \\"/does-not-exist\\" was not found in portal 99209952. resource not found"`;
+
+exports[`hs fetch --help 1`] = `
+"Usage: hs fetch [options]
+
+Fetch a file, directory or module from HubSpot and write to a path on your computer
+
+Options:
+  -V, --version      output the version number
+  --config <config>  path to a config file
+  --portal <portal>  HubSpot portal id or name from config
+  --debug            set log level to debug
+  --overwrite        overwrite existing files
+  --mode <mode>      read from <draft | publish>
+  -h, --help         output usage information"
+`;
+
+exports[`hs fetch --portal=invalid 1`] = `[Error: Command failed with exit code 1: /Users/cmartin/.nvm/versions/node/v8.15.1/bin/node /Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/bin/hs.js fetch --portal=invalid]`;
+
+exports[`hs fetch cms-theme-boilerplate/js 1`] = `
+"Fetched \\"cms-theme-boilerplate/js\\" from portal 99209952 successfully
+Wrote folder \\"/Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/local/foo\\"
+Wrote file \\"/Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/local/foo/main.js\\"
+Completed fetch of folder \\"cms-theme-boilerplate/js\\" to \\"/Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/local/foo\\""
+`;
+
+exports[`hscms fetch (missing src) 1`] = `"[0m[31m[ERROR][39m[0m A source to fetch is required"`;
+
+exports[`hscms fetch /does-not-exist 1`] = `"[0m[31m[ERROR][39m[0m The request failed because \\"/does-not-exist\\" was not found in portal 99209952. resource not found"`;
+
+exports[`hscms fetch --help 1`] = `
+"Usage: hscms fetch [options]
+
+Fetch a file, directory or module from HubSpot and write to a path on your computer
+
+Options:
+  -V, --version      output the version number
+  --config <config>  path to a config file
+  --portal <portal>  HubSpot portal id or name from config
+  --debug            set log level to debug
+  --overwrite        overwrite existing files
+  --mode <mode>      read from <draft | publish>
+  -h, --help         output usage information"
+`;
+
+exports[`hscms fetch --portal=invalid 1`] = `[Error: Command failed with exit code 1: /Users/cmartin/.nvm/versions/node/v8.15.1/bin/node /Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/bin/hscms.js fetch --portal=invalid]`;
+
+exports[`hscms fetch cms-theme-boilerplate/js 1`] = `
+"Fetched \\"cms-theme-boilerplate/js\\" from portal 99209952 successfully
+Skipped existing \\"/Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/local/foo\\"
+Skipped existing \\"/Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/local/foo/main.js\\"
+Completed fetch of folder \\"cms-theme-boilerplate/js\\" to \\"/Users/cmartin/dev/hubspot-cms-tools/packages/cms-cli/local/foo\\""
+`;

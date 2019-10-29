@@ -8,14 +8,14 @@ const configFilePath = path.join(__dirname, 'hubspot.config.yml');
 const hsPath = path.join(__dirname, binPaths.hs);
 const hscmsPath = path.join(__dirname, binPaths.hscms);
 
-const configSource = ({ portalId, apiKey }) => `
+const configSource = ({ portalId, apiEnv, apiKey }) => `
 defaultPortal: 'test'
 useRawAssets: true
 # defaultMode: 'publish'
 portals:
   - name: 'test'
     portalId: ${portalId}
-    env: 'PROD'
+    env: '${apiEnv}'
     authType: 'apikey'
     apiKey: '${apiKey}'
     useRawAssets: true
