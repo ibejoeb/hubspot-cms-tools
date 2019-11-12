@@ -17,7 +17,6 @@ const testEach = test.each`
 
 testEach('$exe fetch --help', async ({ script }) => {
   const { stdout } = await execNode(script, ['fetch', '--help']);
-  expect(stdout).toBeTruthy();
   expect(stdout).toMatchSnapshot();
 });
 
@@ -29,7 +28,6 @@ testEach('$exe fetch (missing src)', async ({ script }) => {
     ({ stderr } = err);
   }
   expect(stderr).toBeTruthy();
-  expect(stderr).toMatchSnapshot();
 });
 
 testEach('$exe fetch --portal=invalid', async ({ script }) => {
@@ -37,10 +35,9 @@ testEach('$exe fetch --portal=invalid', async ({ script }) => {
   try {
     await execNode(script, ['fetch', '--portal=invalid']);
   } catch (err) {
-    stderr = err;
+    ({ stderr } = err);
   }
   expect(stderr).toBeTruthy();
-  expect(stderr).toMatchSnapshot();
 });
 
 testEach(`$exe fetch ${remoteRoot}/js`, async ({ script }) => {
@@ -48,7 +45,6 @@ testEach(`$exe fetch ${remoteRoot}/js`, async ({ script }) => {
   const dest = path.join(localDir, 'foo');
   const { stdout } = await execNode(script, ['fetch', src, dest]);
   expect(stdout).toBeTruthy();
-  expect(stdout).toMatchSnapshot();
 });
 
 testEach('$exe fetch /does-not-exist', async ({ script }) => {
@@ -56,5 +52,4 @@ testEach('$exe fetch /does-not-exist', async ({ script }) => {
   const dest = localDir;
   const { stderr } = await execNode(script, ['fetch', src, dest]);
   expect(stderr).toBeTruthy();
-  expect(stderr).toMatchSnapshot();
 });
