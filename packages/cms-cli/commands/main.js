@@ -6,6 +6,7 @@ function configureMainCommand(program) {
   program
     .version(version)
     .description('Tools for working with the HubSpot CMS')
+    .command('init', 'initialize a hubspot config file')
     .command('auth [type]', 'configure authentication with HubSpot')
     .command('upload <src> <dest>', 'upload a file or folder to HubSpot')
     .command('fetch <src> [dest]', 'fetch a file or folder')
@@ -21,6 +22,10 @@ function configureMainCommand(program) {
     .command('hubdb <subcommand> <src>', 'manage hubdb tables', {
       noHelp: true,
     })
+    .command(
+      'filemanager <subcommand>',
+      'commands for working with the File Manager'
+    )
     .command('remove <path>', 'delete a file or folder from HubSpot')
     .alias('rm');
 

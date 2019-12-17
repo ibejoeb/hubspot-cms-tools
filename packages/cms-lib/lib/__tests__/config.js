@@ -1,4 +1,11 @@
-const { setConfig, getPortalId } = require('../config');
+const {
+  setConfig,
+  getConfig,
+  getPortalId,
+  updateDefaultPortal,
+  deleteEmptyConfigFile,
+} = require('../config');
+jest.mock('fs');
 
 describe('lib/config', () => {
   describe('getPortalId()', () => {
@@ -30,6 +37,40 @@ describe('lib/config', () => {
     });
     it('returns defaultPortal from config', () => {
       expect(getPortalId()).toEqual(456);
+    });
+  });
+
+  describe('updateDefaultPortal()', () => {
+    const myPortalName = 'Foo';
+
+    beforeEach(() => {
+      updateDefaultPortal(myPortalName);
+    });
+
+    it('sets the defaultPortal in the config', () => {
+      expect(getConfig().defaultPortal).toEqual(myPortalName);
+    });
+  });
+
+  describe('deleteEmptyConfigFile()', () => {
+    const fs = require('fs');
+
+    it('does not delete config file if there are contents', () => {
+      fs.__setReadFile('defaultPortal: Foo');
+      fs.__setExistsValue(true);
+      fs.unlinkSync = jest.fn();
+
+      deleteEmptyConfigFile();
+      expect(fs.unlinkSync).not.toHaveBeenCalled();
+    });
+
+    it('deletes config file if empty', () => {
+      fs.__setReadFile('');
+      fs.__setExistsValue(true);
+      fs.unlinkSync = jest.fn();
+
+      deleteEmptyConfigFile();
+      expect(fs.unlinkSync).toHaveBeenCalled();
     });
   });
 });

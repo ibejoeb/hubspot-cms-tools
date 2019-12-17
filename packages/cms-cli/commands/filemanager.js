@@ -2,16 +2,10 @@ const fs = require('fs');
 const path = require('path');
 const { version } = require('../package.json');
 
-const { loadConfig, uploadFolder } = require('@hubspot/cms-lib');
-const {
-  getFileMapperApiQueryFromMode,
-} = require('@hubspot/cms-lib/fileMapper');
-const { upload } = require('@hubspot/cms-lib/api/fileMapper');
-const {
-  getCwd,
-  convertToUnixPath,
-  isAllowedExtension,
-} = require('@hubspot/cms-lib/path');
+const { loadConfig } = require('@hubspot/cms-lib');
+const { uploadFolder } = require('@hubspot/cms-lib/fileManager');
+const { uploadFile } = require('@hubspot/cms-lib/api/fileManager');
+const { getCwd, convertToUnixPath } = require('@hubspot/cms-lib/path');
 const { logger } = require('@hubspot/cms-lib/logger');
 const {
   logErrorInstance,
@@ -25,29 +19,33 @@ const {
   addConfigOptions,
   addPortalOptions,
   addLoggerOptions,
-  addModeOptions,
   setLogLevel,
   getPortalId,
-  getMode,
 } = require('../lib/commonOpts');
 const { logDebugInfo } = require('../lib/debugInfo');
-const {
-  validateConfig,
-  validatePortal,
-  validateMode,
-} = require('../lib/validation');
+const { validateConfig, validatePortal } = require('../lib/validation');
 const {
   trackCommandUsage,
   addHelpUsageTracking,
 } = require('../lib/usageTracking');
 
-const COMMAND_NAME = 'upload';
+const COMMAND_NAME = 'filemanager-upload';
 
-function configureUploadCommand(program) {
+function configureFileManagerCommand(program) {
+  program
+    .version(version)
+    .description('Commands for working with the File Manager')
+    .command('upload <src> <dest>', 'upload files to the file manager');
+
+  addLoggerOptions(program);
+  addHelpUsageTracking(program);
+}
+
+function configureFileManagerUploadCommand(program) {
   program
     .version(version)
     .description(
-      'Upload a folder or file from your computer to the HubSpot CMS'
+      'Upload a folder or file from your computer to the HubSpot File Manager'
     )
     .arguments('<src> <dest>')
     .action(async (src, dest, command = {}) => {
@@ -56,18 +54,11 @@ function configureUploadCommand(program) {
       const { config: configPath } = command;
       loadConfig(configPath);
 
-      if (
-        !(
-          validateConfig() &&
-          (await validatePortal(command)) &&
-          validateMode(program)
-        )
-      ) {
+      if (!validateConfig() || !(await validatePortal(command))) {
         process.exit(1);
       }
 
       const portalId = getPortalId(command);
-      const mode = getMode(command);
       const absoluteSrcPath = path.resolve(getCwd(), src);
 
       let stats;
@@ -89,7 +80,7 @@ function configureUploadCommand(program) {
       const normalizedDest = convertToUnixPath(dest);
       trackCommandUsage(
         COMMAND_NAME,
-        { mode, type: stats.isFile() ? 'file' : 'folder' },
+        { type: stats.isFile() ? 'file' : 'folder' },
         portalId
       );
 
@@ -103,11 +94,6 @@ function configureUploadCommand(program) {
       }
 
       if (stats.isFile()) {
-        if (!isAllowedExtension(src)) {
-          logger.error(`The file "${src}" does not have a valid extension`);
-          return;
-        }
-
         if (shouldIgnoreFile(absoluteSrcPath, getCwd())) {
           logger.error(
             `The file "${src}" is being ignored via an .hsignore rule`
@@ -115,9 +101,7 @@ function configureUploadCommand(program) {
           return;
         }
 
-        upload(portalId, absoluteSrcPath, normalizedDest, {
-          qs: getFileMapperApiQueryFromMode(mode),
-        })
+        uploadFile(portalId, absoluteSrcPath, normalizedDest)
           .then(() => {
             logger.log('Uploaded file "%s" to "%s"', src, normalizedDest);
           })
@@ -141,7 +125,6 @@ function configureUploadCommand(program) {
           `Uploading files from ${src} to ${dest} in portal ${portalId}`
         );
         uploadFolder(portalId, absoluteSrcPath, dest, {
-          mode,
           cwd: getCwd(),
         })
           .then(() => {
@@ -159,10 +142,10 @@ function configureUploadCommand(program) {
   addConfigOptions(program);
   addPortalOptions(program);
   addLoggerOptions(program);
-  addModeOptions(program, { write: true });
   addHelpUsageTracking(program, COMMAND_NAME);
 }
 
 module.exports = {
-  configureUploadCommand,
+  configureFileManagerUploadCommand,
+  configureFileManagerCommand,
 };

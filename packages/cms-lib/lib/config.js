@@ -6,26 +6,21 @@ const {
   logErrorInstance,
   logFileSystemErrorInstance,
 } = require('../errorHandlers');
-const { Mode } = require('./constants');
+const { getCwd } = require('../path');
+const {
+  DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+  EMPTY_CONFIG_FILE_CONTENTS,
+  Mode,
+} = require('./constants');
 
+let _config;
 let _configPath;
-
-const { getConfig, setConfig } = (() => {
-  let _config;
-  return {
-    getConfig: () => _config,
-    setConfig(updatedConfig) {
-      _config = updatedConfig;
-      return _config;
-    },
-  };
-})();
 
 const writeConfig = () => {
   logger.debug(`Writing current config to ${_configPath}`);
   fs.writeFileSync(
     _configPath,
-    yaml.safeDump(JSON.parse(JSON.stringify(getConfig(), null, 2)))
+    yaml.safeDump(JSON.parse(JSON.stringify(_config, null, 2)))
   );
 };
 
@@ -61,10 +56,14 @@ const parseConfig = configSource => {
   return { parsed, error };
 };
 
-const loadConfig = path => {
-  _configPath = path || findup(['hubspot.config.yml', 'hubspot.config.yaml']);
+const loadConfig = (path, options = {}) => {
+  _configPath = getConfigPath(path);
   if (!_configPath) {
-    logger.error('A hubspot.config.yml file could not be found');
+    if (!options.silenceErrors) {
+      logger.error(
+        `A ${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME} file could not be found`
+      );
+    }
     return;
   }
 
@@ -73,22 +72,57 @@ const loadConfig = path => {
   if (sourceError) return;
   const { parsed, error: parseError } = parseConfig(source);
   if (parseError) return;
-  setConfig(parsed);
+  _config = parsed;
 
-  if (!getConfig()) {
+  if (!_config) {
     logger.debug('The config file was empty config');
     logger.debug('Initializing an empty config');
-    setConfig({
+    _config = {
       portals: [],
-    });
+    };
   }
 };
 
-const getAndLoadConfigIfNeeded = () => {
-  if (!getConfig()) {
-    loadConfig();
+const isTrackingAllowed = () => {
+  if (!configFileExists() || configFileIsBlank()) {
+    return true;
   }
-  return getConfig();
+  const { allowUsageTracking } = getAndLoadConfigIfNeeded();
+  return allowUsageTracking !== false;
+};
+
+const getAndLoadConfigIfNeeded = () => {
+  if (!_config) {
+    loadConfig(null, {
+      silenceErrors: true,
+    });
+  }
+  return _config;
+};
+
+const getConfig = () => _config;
+
+const setConfig = updatedConfig => {
+  _config = updatedConfig;
+  return _config;
+};
+
+const getConfigPath = path => {
+  return (
+    path ||
+    findup([
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
+      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
+    ])
+  );
+};
+
+const setConfigPath = path => {
+  return (_configPath = path);
+};
+
+const getConfigEnv = environment => {
+  return environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
 };
 
 const getPortalConfig = portalId => {
@@ -141,6 +175,8 @@ const updatePortalConfig = configOptions => {
     scopes,
     tokenInfo,
     defaultMode,
+    name,
+    apiKey,
   } = configOptions;
 
   if (!portalId) {
@@ -160,15 +196,16 @@ const updatePortalConfig = configOptions => {
       tokenInfo,
     };
   }
-  const env =
-    environment && environment.toUpperCase() === 'QA' ? 'QA' : undefined;
+  const env = getConfigEnv(environment);
   const mode = defaultMode && defaultMode.toLowerCase();
   const nextPortalConfig = {
     ...portalConfig,
+    name,
     env,
     portalId,
     authType,
     auth,
+    apiKey,
     defaultMode: Mode[mode] ? mode : undefined,
   };
 
@@ -187,12 +224,70 @@ const updatePortalConfig = configOptions => {
   writeConfig();
 };
 
+/**
+ * @throws {Error}
+ */
+const updateDefaultPortal = defaultPortal => {
+  if (
+    !defaultPortal ||
+    (typeof defaultPortal !== 'number' && typeof defaultPortal !== 'string')
+  ) {
+    throw new Error(
+      'A defaultPortal with value of number or string is required to update the config'
+    );
+  }
+
+  const config = getAndLoadConfigIfNeeded();
+  config.defaultPortal = defaultPortal;
+  setDefaultConfigPathIfUnset();
+  writeConfig();
+};
+
+const setDefaultConfigPathIfUnset = () => {
+  if (!_configPath) {
+    setDefaultConfigPath();
+  }
+};
+
+const setDefaultConfigPath = () => {
+  setConfigPath(`${getCwd()}/${DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME}`);
+};
+
+const configFileExists = () => {
+  return _configPath && fs.existsSync(_configPath);
+};
+
+const configFileIsBlank = () => {
+  return _configPath && fs.readFileSync(_configPath).length === 0;
+};
+
+const createEmptyConfigFile = () => {
+  setDefaultConfigPathIfUnset();
+
+  if (configFileExists()) {
+    return;
+  }
+
+  return fs.writeFileSync(_configPath, EMPTY_CONFIG_FILE_CONTENTS);
+};
+
+const deleteEmptyConfigFile = () => {
+  return (
+    configFileExists() && configFileIsBlank() && fs.unlinkSync(_configPath)
+  );
+};
+
 module.exports = {
   getAndLoadConfigIfNeeded,
   getConfig,
+  getConfigPath,
   setConfig,
   loadConfig,
   getPortalConfig,
   getPortalId,
   updatePortalConfig,
+  updateDefaultPortal,
+  createEmptyConfigFile,
+  deleteEmptyConfigFile,
+  isTrackingAllowed,
 };
