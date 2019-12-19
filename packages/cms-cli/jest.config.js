@@ -8,5 +8,6 @@ module.exports = {
     portalId: 0,
     apiEnv: 'QA',
     apiKey: '',
+    remoteRoot: 'cms-theme-boilerplate',
   },
 };
