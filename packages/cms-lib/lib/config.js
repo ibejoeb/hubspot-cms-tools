@@ -3,7 +3,11 @@ const path = require('path');
 const os = require('os');
 const ignore = require('ignore');
 const yaml = require('js-yaml');
+<<<<<<< HEAD
 const findup = require('findup-sync');
+=======
+const fs = require('fs');
+>>>>>>> specify config file via environment variable
 const { logger } = require('../logger');
 const {
   logErrorInstance,
@@ -259,15 +263,8 @@ const getAndLoadConfigIfNeeded = () => {
   return _config;
 };
 
-const getConfigPath = path => {
-  return (
-    path ||
-    findup([
-      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME,
-      DEFAULT_HUBSPOT_CONFIG_YAML_FILE_NAME.replace('.yml', '.yaml'),
-    ])
-  );
-};
+// eslint-disable-next-line
+const getConfigPath = path => process.env.HS_CMS_CONFIG_PATH;
 
 const setConfigPath = path => {
   return (_configPath = path);

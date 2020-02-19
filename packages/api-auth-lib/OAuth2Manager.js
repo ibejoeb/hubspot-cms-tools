@@ -1,7 +1,6 @@
 const express = require('express');
 const request = require('request-promise-native');
 const moment = require('moment');
-const open = require('open');
 
 const { HubSpotAuthError } = require('./Errors');
 const { handleExit } = require('@hubspot/cms-lib/lib/process');
@@ -60,7 +59,9 @@ class OAuth2Manager {
   }
 
   async authorize() {
-    open(this.buildAuthUrl());
+    //open(this.buildAuthUrl());
+    const oauthUrl = this.buildAuthUrl();
+    console.log(`go to ${oauthUrl}`);
 
     // eslint-disable-next-line no-async-promise-executor
     return new Promise(async (resolve, reject) => {
