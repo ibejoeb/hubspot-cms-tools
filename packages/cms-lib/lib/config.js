@@ -3,6 +3,7 @@ const path = require('path');
 const os = require('os');
 const ignore = require('ignore');
 const yaml = require('js-yaml');
+const findup = require('findup-sync');
 const { logger } = require('../logger');
 const {
   logErrorInstance,
